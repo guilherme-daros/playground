@@ -1,0 +1,9 @@
+# Build files
+.cache
+build
+
+# Git stuff
+.git
+
+# Output
+output
