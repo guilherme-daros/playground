@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 
 namespace sb::types {
@@ -12,6 +14,7 @@ struct StringLiteral {
 
   template <std::size_t N2>
   consteval bool operator==(const StringLiteral<N2> s) const {
+    (void)s;
     return false;
   }
 
