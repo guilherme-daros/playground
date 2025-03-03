@@ -1,5 +1,6 @@
 # CMake Stuff
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.28)
+include("cmake/sqlite3.cmake" PUBLIC)
 include("cmake/create_lib.cmake" PUBLIC)
 set(LIB_PROJECT_NAME playground)
 
@@ -19,6 +20,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.bin)
 
 add_subdirectory("include")
+add_subdirectory("src")
 
 if(BUILD_EXAMPLES STREQUAL "yes")
   add_subdirectory(examples)

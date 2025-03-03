@@ -1,5 +1,6 @@
 # Build files
 .cache
+.bin
 build
 
 # Git stuff
@@ -7,3 +8,6 @@ build
 
 # Output
 output
+
+# App running files
+*.db
