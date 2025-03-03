@@ -16,7 +16,7 @@ show_help() {
 case "$1" in
   -c | --clean)
     echo "Deleting build folders"
-    rm -rf $BUILD_DIR output
+    rm -rf $BUILD_DIR output *.db
     exit 0
     ;;
   -e | --example)
@@ -33,6 +33,7 @@ case "$1" in
     ;;
   -h | --help)
     show_help
+    exit 0 
     ;;
   *)
     mkdir -p $BUILD_DIR

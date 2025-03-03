@@ -11,6 +11,8 @@
 #include <string>
 #include <string_view>
 
+#include <unistd.h>
+
 #include "Level.hpp"
 #include "Output.hpp"
 #include "Timing.hpp"
