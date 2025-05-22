@@ -1,5 +1,3 @@
-## (Antimony) Logging Library 
+## (Antimony) Library Collection
 
-Templated extensible/configurable logging engine
-
-#### Logger
+My pet project with random stuff I build to prove a point
