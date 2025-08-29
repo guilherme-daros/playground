@@ -45,7 +45,7 @@ class Logger {
   class Log {
    public:
     Log(Level level, std::ostream& output, std::mutex& mtx, const uint32_t id, const std::source_location file_src)
-        : level_(level), output_(output), mtx_(mtx), id_(id) {
+        : level_(level), output_(output), mtx_(mtx), id_(id), timing_() {
       file_number_ = utils::get_pos(file_src.file_name(), file_src.line());
     }
 
