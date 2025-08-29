@@ -1,20 +1,19 @@
 #pragma once
 
-#include <typeinfo>
-
 #include "Listener.hpp"
+
 namespace sb::event {
 
-template <typename L, typename T>
-auto AddListener(T* listener) -> void {
-  auto& list = Listener<T>::notify_list();
-  list.insert({typeid(L).hash_code(), listener});
+template <typename ListenerType, typename EventType>
+auto AddListener(ListenerType* listener) -> void {
+  auto& list = Listener<EventType>::notify_list();
+  list.insert({reinterpret_cast<std::uintptr_t>(listener), static_cast<EventType*>(listener)});
 }
 
-template <typename L, typename T>
-auto RemoveListener(T* listener) -> void {
-  auto& list = Listener<T>::notify_list();
-  list.erase(typeid(L).hash_code());
+template <typename ListenerType, typename EventType>
+auto RemoveListener(ListenerType* listener) -> void {
+  auto& list = Listener<EventType>::notify_list();
+  list.erase(reinterpret_cast<std::uintptr_t>(listener));
 }
 
 template <typename T, typename... Args>

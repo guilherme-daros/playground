@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <thread>
 #include "event/Listen.hpp"
 #include "event/Notifier.hpp"
 
@@ -19,48 +20,45 @@ class BootEvent {
   auto operator()(int i) -> void { OnBoot(i); }
 };
 
-class Manager final : public sb::event::Listen<Manager, RebootEvent, BootEvent> {
+class ObjectB final : public sb::event::Listen<ObjectB, RebootEvent, BootEvent> {
  public:
-  Manager() : Listen(this) {}
-  ~Manager() { Listen::Wait(); }
+  ObjectB() : Listen(this) {}
+  ~ObjectB() { Listen::Wait(); }
 
  private:
   auto OnReboot(bool done) -> void override {
-    std::this_thread::sleep_for(100ms);
-    std::cout << std::setw(20) << std::left << "Manager" << ": Reboot Notification" << std::endl;
+    std::this_thread::sleep_for(106min);
+    std::cout << std::setw(20) << std::left << "ObjectB" << ": Reboot Notification" << std::endl;
   }
 
   auto OnBoot(int i) -> void override {
-    std::this_thread::sleep_for(102ms);
-    std::cout << std::setw(20) << std::left << "Manager" << ": Boot Notification" << std::endl;
+    std::this_thread::sleep_for(102min);
+    std::cout << std::setw(20) << std::left << "ObjectB" << ": Boot Notification" << std::endl;
   }
 };
 
-class Coordinator final : public sb::event::Listen<Coordinator, RebootEvent, BootEvent> {
+class ObjectA final : public sb::event::Listen<ObjectA, RebootEvent, BootEvent> {
  public:
-  Coordinator() : Listen(this) {}
-  ~Coordinator() { Listen::Wait(); }
+  ObjectA() : Listen(this) {}
+  ~ObjectA() { Listen::Wait(); }
 
  private:
   auto OnReboot(bool done) -> void override {
-    std::this_thread::sleep_for(100ms);
-    std::cout << std::setw(20) << std::left << "Coordinator" << ": Reboot Notification" << std::endl;
+    std::this_thread::sleep_for(100min);
+    std::cout << std::setw(20) << std::left << "ObjectA" << ": Reboot Notification" << std::endl;
   }
 
   auto OnBoot(int i) -> void override {
-    std::this_thread::sleep_for(102ms);
-    std::cout << std::setw(20) << std::left << "Coordinator" << ": Boot Notification" << std::endl;
+    std::this_thread::sleep_for(104min);
+    std::cout << std::setw(20) << std::left << "ObjectA" << ": Boot Notification" << std::endl;
   }
 };
 
 auto main(int argc, char* argv[]) -> int {
-  auto m = Manager();
+  auto a = ObjectA();
+  auto b = ObjectB();
 
-  {
-    auto c = Coordinator();
-    sb::event::Notify<RebootEvent>(true);
-  }
-
+  sb::event::Notify<RebootEvent>(true);
   sb::event::Notify<BootEvent>(42);
 
   std::cout << "Main Thread Stopping" << std::endl;
