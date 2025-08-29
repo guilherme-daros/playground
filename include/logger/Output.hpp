@@ -21,7 +21,6 @@ class Console {
 
   auto stream() -> std::ostream& {
     static auto& pStream = std::cout;
-    pStream << "CONS>";
     return pStream;
   }
 
@@ -35,7 +34,6 @@ class Terminal {
  public:
   auto stream() -> std::ostream& {
     static auto& pStream = std::cout;
-    pStream << "TERM>";
     return pStream;
   }
 

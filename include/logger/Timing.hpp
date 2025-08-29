@@ -2,11 +2,9 @@
 
 #include <chrono>
 #include <concepts>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
+#include <format>
 #include <string_view>
+
 #include "Meta.hpp"
 
 namespace sb::logger::timing {
@@ -21,19 +19,18 @@ class Uptime {
  public:
   using Default = Uptime;
   auto get() const -> std::string_view {
-    static auto start = std::chrono::steady_clock::now();
+    static const auto start = std::chrono::steady_clock::now();
+    const auto now = std::chrono::steady_clock::now();
 
-    auto now = std::chrono::steady_clock::now();
-    auto uptime_s = std::chrono::duration_cast<std::chrono::seconds>(now - start);
-    auto uptime_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) % 1000;
-    auto os = std::ostringstream();
-    os << std::setw(seconds_width) << std::right << uptime_s.count() << "." << std::setw(milliseconds_width)
-       << std::setfill('0') << (uptime_ms.count());
+    const auto uptime_s = std::chrono::duration_cast<std::chrono::seconds>(now - start);
+    const auto uptime_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) % 1000;
 
-    static thread_local auto uptime = std::string(os.str());
-    return uptime;
+    // Use thread_local for the buffer to avoid allocations on every call.
+    static thread_local std::string uptime_str;
+    uptime_str = std::format("{:>{}}.{:0>3}", uptime_s.count(), seconds_width, uptime_ms.count());
+    return uptime_str;
   }
-  constexpr auto width() const -> uint8_t { return seconds_width + milliseconds_width; }
+  constexpr auto width() const -> uint8_t { return seconds_width + 1 + milliseconds_width; }
 
  private:
   static constexpr uint8_t seconds_width = 5;
@@ -44,19 +41,17 @@ class Timestamp {
  public:
   auto get() const -> std::string_view {
     const auto now = std::chrono::system_clock::now();
-    const auto time = std::chrono::system_clock::to_time_t(now);
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-    auto os = std::ostringstream();
-    os << std::put_time(std::localtime(&time), "%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << ms.count();
-
-    static thread_local auto timestamp = std::string(os.str());
-    return timestamp;
+    // Use thread_local for the buffer to avoid allocations on every call.
+    static thread_local std::string timestamp_str;
+    timestamp_str = std::format("{:%T}.{:0>3}", now, ms.count());
+    return timestamp_str;
   }
   constexpr auto width() const -> uint8_t { return timestamp_width; }
 
  private:
+  // "HH:MM:SS.ms" -> 8 + 1 + 3 = 12
   static constexpr uint8_t timestamp_width = 12;
 };
 
