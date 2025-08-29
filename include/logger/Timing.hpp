@@ -60,10 +60,9 @@ class Timestamp {
   static constexpr uint8_t timestamp_width = 12;
 };
 
-template <typename T>
-struct is_timing : std::bool_constant<IsTiming<T>> {};
+constexpr auto is_timing = []<typename T>() { return IsTiming<T>; };
 
 template <typename... Ts>
-using Timing = meta::TypeFinder_t<Uptime, timing::is_timing, Ts...>;
+using Timing = meta::TypeFinder_t<Uptime, is_timing, Ts...>;
 
 }  // namespace sb::logger::timing
