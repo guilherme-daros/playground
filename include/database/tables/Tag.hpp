@@ -2,8 +2,8 @@
 
 #include <string>
 
+#include "database/BaseDAO.hpp"  // New base class
 #include "database/Handler.hpp"
-#include "database/Interface.hpp"
 
 namespace sb::database {
 
@@ -27,26 +27,23 @@ class TagDTO {
   int type_;
 };
 
-class TagDAO : public Interface<TagDTO> {
+class TagDAO : public BaseDAO<TagDTO, std::string> {
  public:
   explicit TagDAO(Handler& db_handler, std::string table_name);
   ~TagDAO() = default;
 
-  // Interface Methods
+  // Interface Methods (implementing virtual methods from BaseDAO)
+  void CreateTable() override;
   auto Create(const TagDTO& obj) -> bool override;
   auto Read(const std::string& tag) -> std::optional<TagDTO> override;
   auto ReadAll() -> std::list<TagDTO> override;
   auto Update(const TagDTO& obj) -> bool override;
   auto Delete(const std::string& tag) -> bool override;
-  auto DeleteAll() -> bool override;
 
  private:
-  void CreateTable();
-  Handler& db_handler_;
-  std::string table_name_;
-
-  std::string first_column_ = "tag";
-  std::string second_column_ = "tag_type";
+  // Column names could be static const or passed in constructor
+  static const std::string TAG_COLUMN;
+  static const std::string TYPE_COLUMN;
 };
 
 }  // namespace sb::database

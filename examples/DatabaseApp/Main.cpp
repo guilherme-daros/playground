@@ -37,7 +37,6 @@ int main(int argc, char* argv[]) {
   dao.Create(sb::database::TagDTO{"Rust", 3});
   print_all(dao);
 
-  // 5. Read a single object
   Main::Info() << "Reading 'Python' tag..." << std::endl;
   auto python_tag = dao.Read("Python");
   if (python_tag) {
@@ -46,7 +45,6 @@ int main(int argc, char* argv[]) {
     Main::Error() << "Could not find 'Python' tag" << std::endl;
   }
 
-  // 6. Update an object
   Main::Info() << "Updating 'Python' tag type to 20..." << std::endl;
   dao.Update(sb::database::TagDTO{"Python", 20});
   python_tag = dao.Read("Python");
@@ -56,12 +54,10 @@ int main(int argc, char* argv[]) {
     Main::Error() << "Could not find 'Python' tag after update" << std::endl;
   }
 
-  // 7. Delete an object
   Main::Info() << "Deleting 'Rust' tag..." << std::endl;
   dao.Delete("Rust");
   print_all(dao);
 
-  // 8. Clean up
   Main::Info() << "Deleting all remaining tags..." << std::endl;
   dao.DeleteAll();
   print_all(dao);
