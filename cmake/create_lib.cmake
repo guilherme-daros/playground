@@ -6,6 +6,6 @@ endfunction()
 
 function(create_static_lib DIRNAME SOURCES)
   add_library(${DIRNAME} STATIC ${SOURCES})
-  target_include_directories(${DIRNAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+  target_include_directories(${DIRNAME} PUBLIC ${CMAKE_SOURCE_DIR}/include/${DIRNAME})
   add_library(sb::${DIRNAME} ALIAS ${DIRNAME})
 endfunction()
