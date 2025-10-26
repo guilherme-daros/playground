@@ -1,10 +1,14 @@
 #pragma once
 
 #include <cstdint>
+#include <exception>
 #include <future>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+
+#include "logger/Logger.hpp"
+#include "types/Typename.hpp"
 
 namespace sb::event {
 
@@ -13,12 +17,26 @@ class Notifier;
 template <typename T>
 class Listener {
   using List = std::unordered_map<std::uintptr_t, T*>;
+  static constexpr auto kName = sb::types::Typename<T>::get();
+  using EventLogger = sb::logger::Logger<kName>;
 
  public:
   static auto Notify(auto... args) -> void {
     std::lock_guard<std::mutex> lock(mtx_);
     for (auto const& [id, listener] : notify_list()) {
       futures_.push_back(std::async(std::launch::async, [listener, args...]() { (*listener)(args...); }));
+    }
+  }
+
+  static auto NotifySync(auto... args) -> void {
+    for (auto const& [id, listener] : notify_list()) {
+      try {
+        (*listener)(args...);
+      } catch (const std::exception& e) {
+        typename EventLogger::Error() << "Thrown: " << e.what() << std::endl;
+      } catch (...) {
+        typename EventLogger::Error() << "Unknown exception caught" << std::endl;
+      }
     }
   }
 
@@ -31,7 +49,13 @@ class Listener {
 
     for (auto& f : local_futures) {
       if (f.valid()) {
-        f.wait();
+        try {
+          f.get();
+        } catch (const std::exception& e) {
+          typename EventLogger::Error() << "Thrown: " << e.what() << std::endl;
+        } catch (...) {
+          typename EventLogger::Error() << "Unknown exception caught" << std::endl;
+        }
       }
     }
   }

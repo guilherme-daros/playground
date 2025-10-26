@@ -21,4 +21,10 @@ template <typename F, typename... Args>
 auto Notify(Args... args) -> void {
   Listener<F>::Notify(args...);
 }
+
+template <typename F, typename... Args>
+  requires std::invocable<F, Args...>
+auto NotifySync(Args... args) -> void {
+  Listener<F>::NotifySync(args...);
+}
 }  // namespace sb::event
