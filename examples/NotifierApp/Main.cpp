@@ -41,7 +41,7 @@ class ObjectA final : public sb::event::Listen<EventA> {
     std::this_thread::sleep_for(std::chrono::seconds(rand() % 10));
 
     if ((rand() % 10) > 5) {
-      throw ExceptionA("Fuck");
+      throw ExceptionA("Luck is not on our side");
     }
 
     LogA::Info() << "Received EventA " << std::endl;
@@ -51,8 +51,8 @@ class ObjectA final : public sb::event::Listen<EventA> {
 auto main() -> int {
   auto a = ObjectA();
 
-  for (auto i = 0; i < 10; i++) {
-    sb::event::NotifySync<EventA>(true);
+  for (auto i = 0; i < 100; i++) {
+    sb::event::Notify<EventA>(true);
     std::this_thread::sleep_for(50ms);
   }
 

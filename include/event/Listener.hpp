@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "logger/Logger.hpp"
+#include "types/ThreadPool.hpp"
 #include "types/Typename.hpp"
 
 namespace sb::event {
@@ -16,15 +17,20 @@ class Notifier;
 
 template <typename T>
 class Listener {
-  using List = std::unordered_map<std::uintptr_t, T*>;
   static constexpr auto kName = sb::types::Typename<T>::get();
+
+  using List = std::unordered_map<std::uintptr_t, T*>;
   using EventLogger = sb::logger::Logger<kName>;
 
  public:
   static auto Notify(auto... args) -> void {
     std::lock_guard<std::mutex> lock(mtx_);
+
+    sb::types::ThreadPool::SetConfig(2);
+    auto& tp = sb::types::ThreadPool::Instance();
+
     for (auto const& [id, listener] : notify_list()) {
-      futures_.push_back(std::async(std::launch::async, [listener, args...]() { (*listener)(args...); }));
+      futures_.push_back(tp.enqueue([listener, args...]() { (*listener)(args...); }));
     }
   }
 
