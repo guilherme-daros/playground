@@ -1,6 +1,5 @@
 # CMake Stuff
 cmake_minimum_required(VERSION 3.28)
-include("cmake/sqlite3.cmake" PUBLIC)
 include("cmake/create_lib.cmake" PUBLIC)
 set(LIB_PROJECT_NAME playground)
 
