@@ -1,15 +1,27 @@
 #pragma once
 
+#include <functional>
 #include "Notifier.hpp"
 
 namespace sb::event {
-template <typename T, typename... Ts>
+template <typename... Ts>
 class Listen : public Ts... {
  protected:
-  explicit Listen(T* l) { (AddListener<T, Ts>(l), ...); }
+  template <typename Derived>
+  explicit Listen(Derived* derived) {
+    (AddListener<Derived, Ts>(derived), ...);
+    unregister_ = [derived] { (RemoveListener<Derived, Ts>(derived), ...); };
+  }
 
-  ~Listen() { (RemoveListener<T, Ts>(static_cast<T*>(this)), ...); }
+  ~Listen() {
+    if (unregister_) {
+      unregister_();
+    }
+  }
 
   static auto Wait() { (Listener<Ts>::Wait(), ...); }
+
+ private:
+  std::function<void()> unregister_;
 };
 }  // namespace sb::event
