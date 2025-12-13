@@ -6,7 +6,8 @@
 namespace sb::types {
 
 template <std::size_t N>
-struct StringLiteral {
+class StringLiteral {
+ public:
   char data[N]{};
 
   consteval StringLiteral(const char (&str)[N]) { std::copy_n(str, N, data); }

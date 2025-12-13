@@ -37,11 +37,9 @@ inline auto get_pos(const std::string_view path) -> std::string_view {
 
 template <types::StringLiteral domain, typename... Configs>
 class Logger {
- public:
   using Output = output::Output<Configs...>;
   using Timing = timing::Timing<Configs...>;
 
- private:
   class Log {
    public:
     Log(Level level, std::ostream& output, std::mutex& mtx, const uint64_t id, const std::source_location file_src)
@@ -96,34 +94,38 @@ class Logger {
     const Timing timing_;
     const bool enabled_;
   };
+  static Output output_;
 
  public:
-  struct Debug : public Log {
+  static Level logging_level;
+
+  class Debug : public Log {
+   public:
     Debug(const uint64_t id = utils::get_thread_id(),
           const std::source_location file_src = std::source_location::current())
         : Log(Level::Debug, output_.stream(), output_.mutex(), id, file_src) {}
   };
 
-  struct Info : public Log {
+  class Info : public Log {
+   public:
     Info(const uint64_t id = utils::get_thread_id(),
          const std::source_location file_src = std::source_location::current())
         : Log(Level::Info, output_.stream(), output_.mutex(), id, file_src) {}
   };
 
-  struct Warning : public Log {
+  class Warning : public Log {
+   public:
     Warning(const uint64_t id = utils::get_thread_id(),
             const std::source_location file_src = std::source_location::current())
         : Log(Level::Warning, output_.stream(), output_.mutex(), id, file_src) {}
   };
 
-  struct Error : public Log {
+  class Error : public Log {
+   public:
     Error(const uint64_t id = utils::get_thread_id(),
           const std::source_location file_src = std::source_location::current())
         : Log(Level::Error, output_.stream(), output_.mutex(), id, file_src) {}
   };
-
-  static Level logging_level;
-  static Output output_;
 };
 
 template <types::StringLiteral domain, typename... Configs>

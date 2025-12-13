@@ -17,7 +17,6 @@ concept IsTiming = requires(T t) {
 
 class Uptime {
  public:
-  using Default = Uptime;
   auto get() const -> std::string_view {
     static const auto start = std::chrono::steady_clock::now();
     const auto now = std::chrono::steady_clock::now();
@@ -39,13 +38,15 @@ class Uptime {
 
 class Timestamp {
  public:
+  using Default = Timestamp;
   auto get() const -> std::string_view {
     const auto now = std::chrono::system_clock::now();
-    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    const auto ms = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 100;
+    const auto s = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-    // Use thread_local for the buffer to avoid allocations on every call.
     static thread_local std::string timestamp_str;
-    timestamp_str = std::format("{:%T}.{:0>3}", now, ms.count());
+
+    timestamp_str = std::format("{:%H:%M}:{}:{:0>3}", now, ms.count(), s.count());
     return timestamp_str;
   }
   constexpr auto width() const -> uint8_t { return timestamp_width; }
@@ -58,6 +59,6 @@ class Timestamp {
 constexpr auto is_timing = []<typename T>() { return IsTiming<T>; };
 
 template <typename... Ts>
-using Timing = meta::TypeFinder_t<Uptime, is_timing, Ts...>;
+using Timing = meta::TypeFinder_t<Timestamp, is_timing, Ts...>;
 
 }  // namespace sb::logger::timing
