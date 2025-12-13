@@ -45,10 +45,9 @@ class Terminal {
   inline static std::mutex mtx_;
 };
 
-template <typename T>
-struct is_output : std::bool_constant<IsOutput<T>> {};
+constexpr auto is_output = []<typename T>() { return IsOutput<T>; };
 
 template <typename... Ts>
-using Output = meta::TypeFinder_t<Console, output::is_output, Ts...>;
+using Output = meta::TypeFinder_t<Console, is_output, Ts...>;
 
 }  // namespace sb::logger::output
