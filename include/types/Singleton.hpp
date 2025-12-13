@@ -5,23 +5,19 @@ namespace sb::types {
 template <class T>
 class Singleton {
  public:
-  Singleton &operator=(const Singleton &) = delete;
-  Singleton &operator=(Singleton &&) = delete;
-
-  auto static Instance() -> T & {
-    if (!instance_) instance_ = new T_Instance;
-    return *instance_;
+  static auto Instance() -> T& {
+    static T instance;
+    return instance;
   }
 
  protected:
-  Singleton() {}
-  ~Singleton() { delete instance_; }
+  Singleton() = default;
+  ~Singleton() = default;
 
- private:
-  struct T_Instance : public T {
-    T_Instance() : T() {}
-  };
-
-  static inline T *instance_ = nullptr;
+ public:
+  Singleton(const Singleton&) = delete;
+  Singleton(Singleton&&) = delete;
+  auto operator=(const Singleton&) -> Singleton& = delete;
+  auto operator=(Singleton&&) -> Singleton& = delete;
 };
 }  // namespace sb::types
