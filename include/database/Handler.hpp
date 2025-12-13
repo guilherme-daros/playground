@@ -1,70 +1,63 @@
 #pragma once
 
-#include <cstdint>
-#include <list>
+#include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
 
 #include "logger/Logger.hpp"
 #include "sqlite3.h"
-
-#include "types/StringLiteral.hpp"
-
-using namespace std::chrono_literals;
 
 namespace sb::database {
 
 using Database = sb::logger::Logger<"Database">;
 
-using Buffer = std::list<std::pair<std::string, std::string>>;
-
 auto busy_handler(void* ptr, int retry_count) -> int;
 
-template <types::StringLiteral db_name>
 class Handler {
+  // Custom deleter for the sqlite3 unique_ptr
+  struct Sqlite3Deleter {
+    void operator()(sqlite3* db) const {
+      if (db) {
+        Database::Info() << "Closing DB connection." << std::endl;
+        sqlite3_close(db);
+      }
+    }
+  };
+
  public:
-  auto static Instance() -> Handler& {
-    static Handler instance;
-    ref_counter++;
-    return instance;
-  }
+  explicit Handler(const std::string& db_path) : db_path_{db_path} {
+    sqlite3* db_ptr = nullptr;
+    auto rc = sqlite3_open(db_path.c_str(), &db_ptr);
+    db_.reset(db_ptr);
 
-  auto name() -> const std::string& { return db_name_; }
-
-  ~Handler() {
-    if (ref_counter == 0) {
-      auto rc = sqlite3_close(db_);
-      Database::Info() << "Close Db: " << rc << std::endl;
+    if (rc) {
+      Database::Error() << "Error opening " << db_path << ": " << sqlite3_errmsg(db_.get()) << std::endl;
+      db_.reset();  // Release pointer on failure
     } else {
-      ref_counter--;
+      Database::Info() << "Successfully opened DB: " << db_path << std::endl;
+      sqlite3_busy_handler(db_.get(), busy_handler, NULL);
+      sqlite3_busy_timeout(db_.get(), 100);
     }
   }
+
+  // Deleted copy and move semantics to prevent issues with the DB handle
+  Handler(const Handler&) = delete;
+  auto operator=(const Handler&) -> Handler& = delete;
+  Handler(Handler&&) = delete;
+  auto operator=(Handler&&) -> Handler& = delete;
+
+  ~Handler() = default;  // The unique_ptr will handle closing the DB
+
+  auto get() const -> sqlite3* { return db_.get(); }
+
+  auto path() const -> const std::string& { return db_path_; }
+
+  auto get_mutex() -> std::mutex& { return mtx_; }
 
  private:
-  Handler() {
-    auto rc = sqlite3_open(db_name.data, &db_);
-    if (rc) {
-      Database::Error() << "Error opening " << db_name.data << ": " << sqlite3_errmsg(db_) << std::endl;
-    }
-
-    sqlite3_busy_handler(db_, busy_handler, NULL);
-    sqlite3_busy_timeout(db_, 100);
-  }
-
-  auto Mutex() -> std::mutex& {
-    static std::mutex mtx;
-    return mtx;
-  }
-
-  sqlite3* db_;
-  static Buffer buffer_;
-
-  static uint32_t ref_counter;
-  constexpr static std::string db_name_{db_name.data};
+  std::string db_path_;
+  std::unique_ptr<sqlite3, Sqlite3Deleter> db_;
+  std::mutex mtx_;
 };
-
-template <types::StringLiteral db_name>
-uint32_t Handler<db_name>::ref_counter = 0;
 
 }  // namespace sb::database

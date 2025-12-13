@@ -1,10 +1,70 @@
+#include <cstdio>
+#include <iostream>
+
 #include "database/Handler.hpp"
+#include "database/tables/Tag.hpp"
+
 #include "logger/Logger.hpp"
 
 using Main = sb::logger::Logger<"Main">;
 
-int main(int argc, char *argv[]) {
-  auto h = sb::database::Handler<"Test.db">::Instance();
+void print_all(sb::database::TagDAO& dao) {
+  Main::Info() << "Reading all tags..." << std::endl;
+  auto all_tags = dao.ReadAll();
+
+  if (all_tags.empty()) {
+    Main::Info() << "(No tags in database)" << std::endl;
+  } else {
+    for (const auto& t : all_tags) {
+      Main::Info() << "  Tag: " << t.tag() << ", Type: " << t.type() << std::endl;
+    }
+  }
+}
+
+int main(int argc, char* argv[]) {
+  Main::Info() << "Database App Example" << std::endl;
+
+  sb::database::Handler h("Test.db");
+  sb::database::TagDAO dao(h, "MyTags");
+
+  Main::Info() << "Deleting all previous tags..." << std::endl;
+  dao.DeleteAll();
+  print_all(dao);
+
+  Main::Info() << "Creating new tags..." << std::endl;
+  dao.Create(sb::database::TagDTO{"C++", 1});
+  dao.Create(sb::database::TagDTO{"Python", 2});
+  dao.Create(sb::database::TagDTO{"Rust", 3});
+  print_all(dao);
+
+  // 5. Read a single object
+  Main::Info() << "Reading 'Python' tag..." << std::endl;
+  auto python_tag = dao.Read("Python");
+  if (python_tag) {
+    Main::Info() << "  Found Tag: " << python_tag->tag() << ", Type: " << python_tag->type() << std::endl;
+  } else {
+    Main::Error() << "Could not find 'Python' tag" << std::endl;
+  }
+
+  // 6. Update an object
+  Main::Info() << "Updating 'Python' tag type to 20..." << std::endl;
+  dao.Update(sb::database::TagDTO{"Python", 20});
+  python_tag = dao.Read("Python");
+  if (python_tag) {
+    Main::Info() << "  Updated Tag: " << python_tag->tag() << ", Type: " << python_tag->type() << std::endl;
+  } else {
+    Main::Error() << "Could not find 'Python' tag after update" << std::endl;
+  }
+
+  // 7. Delete an object
+  Main::Info() << "Deleting 'Rust' tag..." << std::endl;
+  dao.Delete("Rust");
+  print_all(dao);
+
+  // 8. Clean up
+  Main::Info() << "Deleting all remaining tags..." << std::endl;
+  dao.DeleteAll();
+  print_all(dao);
 
   (void)argc;
   (void)argv;
