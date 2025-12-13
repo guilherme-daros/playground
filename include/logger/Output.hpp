@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <iostream>
 #include <mutex>
 #include <ostream>
@@ -8,33 +9,46 @@
 
 namespace sb::logger::output {
 
-class Console;
+template <typename T>
+concept IsOutput = requires(T t) {
+  { t.mutex() } -> std::same_as<std::mutex&>;
+  { t.stream() } -> std::same_as<std::ostream&>;
+};
 
-class Base {
+class Console {
  public:
   using Default = Console;
 
-  virtual auto mutex() -> std::mutex& = 0;
-  virtual auto stream() -> std::ostream& = 0;
-};
-
-template <typename T>
-struct is_output : std::is_base_of<output::Base, T> {};
-
-template <typename... Ts>
-using Output = meta::TypeFinder_t<output::Base, output::is_output, Ts...>;
-
-class Console : public Base {
- public:
-  auto stream() -> std::ostream& override {
+  auto stream() -> std::ostream& {
     static auto& pStream = std::cout;
+    pStream << "CONS>";
     return pStream;
   }
 
-  auto mutex() -> std::mutex& override { return mtx_; }
+  auto mutex() -> std::mutex& { return mtx_; }
 
  private:
   inline static std::mutex mtx_;
 };
+
+class Terminal {
+ public:
+  auto stream() -> std::ostream& {
+    static auto& pStream = std::cout;
+    pStream << "TERM>";
+    return pStream;
+  }
+
+  auto mutex() -> std::mutex& { return mtx_; }
+
+ private:
+  inline static std::mutex mtx_;
+};
+
+template <typename T>
+struct is_output : std::bool_constant<IsOutput<T>> {};
+
+template <typename... Ts>
+using Output = meta::TypeFinder_t<Console, output::is_output, Ts...>;
 
 }  // namespace sb::logger::output

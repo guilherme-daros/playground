@@ -1,13 +1,14 @@
 #include "logger/Logger.hpp"
-#include "logger/Timing.hpp"
+#include "logger/Output.hpp"
 
 namespace {
-using timestamp_logger = sb::logger::Logger<"TimeStamp", sb::logger::timing::Timestamp>;
-using uptime_logger = sb::logger::Logger<"Uptime", sb::logger::timing::Uptime>;
+using console_logger = sb::logger::Logger<"Console">;
+using termina_logger = sb::logger::Logger<"Termina", sb::logger::output::Terminal>;
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  timestamp_logger::Info() << "This has a timestamp" << std::endl;
-  uptime_logger::Info() << "This has an uptime " << std::endl;
+  console_logger::Info() << "HOLY THIS WORKS" << std::endl;
+  termina_logger::Info() << "HOLY THIS WORKS" << std::endl;
   return 0;
 }
