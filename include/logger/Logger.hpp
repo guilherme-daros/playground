@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -8,10 +9,8 @@
 #include <ostream>
 #include <source_location>
 #include <sstream>
-#include <string>
 #include <string_view>
-
-#include <unistd.h>
+#include <thread>
 
 #include "Level.hpp"
 #include "Output.hpp"
@@ -22,15 +21,16 @@
 namespace sb::logger {
 
 namespace utils {
-inline auto get_pos(const std::string_view path, const uint64_t line) -> std::string_view {
-  constexpr wchar_t separator = std::filesystem::path::preferred_separator;
+// Returns a numeric hash of the current thread's ID for logging.
+inline auto get_thread_id() -> uint64_t { return std::hash<std::thread::id>{}(std::this_thread::get_id()) % 1000000; }
 
-  auto offset = path.rfind(separator) != std::string::npos ? path.rfind(separator) : 0;
-
-  auto path_len = path.length() - offset;
-
-  auto filename = std::string_view{path.substr((offset + 1), path.length())};
-  return filename;
+// Extracts the filename from a full path.
+inline auto get_pos(const std::string_view path) -> std::string_view {
+  constexpr char separator = std::filesystem::path::preferred_separator;
+  if (auto pos = path.rfind(separator); pos != std::string_view::npos) {
+    return path.substr(pos + 1);
+  }
+  return path;
 }
 
 }  // namespace utils
@@ -44,23 +44,25 @@ class Logger {
  private:
   class Log {
    public:
-    Log(Level level, std::ostream& output, std::mutex& mtx, const uint32_t id, const std::source_location file_src)
-        : level_(level), output_(output), mtx_(mtx), id_(id), timing_() {
-      file_number_ = utils::get_pos(file_src.file_name(), file_src.line());
+    Log(Level level, std::ostream& output, std::mutex& mtx, const uint64_t id, const std::source_location file_src)
+        : level_(level), output_(output), mtx_(mtx), id_(id), timing_(), enabled_(logging_level >= level_) {
+      if (enabled_) {
+        file_number_ = utils::get_pos(file_src.file_name());
+      }
     }
 
-    // This captures all data_types
+    // This captures all data_types, but only if logging is enabled for this level.
     template <typename T>
     Log& operator<<(const T& token) {
-      os << token;
+      if (enabled_) {
+        os << token;
+      }
       return *this;
     }
 
-    // This deals with iomanip function templates
+    // This deals with iomanip function templates and triggers the actual log write.
     void operator<<(std::ostream& (*func)(std::ostream&)) {
-      if (logging_level < level_) {
-        os.str("");
-        os.clear();
+      if (!enabled_) {
         return;
       }
 
@@ -69,7 +71,7 @@ class Logger {
 
       context << "[" << std::setw(timing_.width()) << timing_.get() << "]";
       context << " ";
-      context << "[" << id_ << "]";
+      context << "[" << std::setw(6) << id_ << "]";
       context << " ";
       context << std::setw(20) << std::right << domain.data;
       context << " ";
@@ -82,9 +84,6 @@ class Logger {
         std::scoped_lock lock{mtx_};
         output_ << context.str() << os.str() << func;
       }
-
-      os.str("");
-      os.clear();
     }
 
    private:
@@ -92,29 +91,34 @@ class Logger {
     std::ostringstream os;
     std::ostream& output_;
     std::string_view file_number_;
-    const uint32_t id_;
-    Level level_;
+    const uint64_t id_;
+    const Level level_;
     const Timing timing_;
+    const bool enabled_;
   };
 
  public:
   struct Debug : public Log {
-    Debug(const uint32_t id = gettid(), const std::source_location file_src = std::source_location::current())
+    Debug(const uint64_t id = utils::get_thread_id(),
+          const std::source_location file_src = std::source_location::current())
         : Log(Level::Debug, output_.stream(), output_.mutex(), id, file_src) {}
   };
 
   struct Info : public Log {
-    Info(const uint32_t id = gettid(), const std::source_location file_src = std::source_location::current())
+    Info(const uint64_t id = utils::get_thread_id(),
+         const std::source_location file_src = std::source_location::current())
         : Log(Level::Info, output_.stream(), output_.mutex(), id, file_src) {}
   };
 
   struct Warning : public Log {
-    Warning(const uint32_t id = gettid(), const std::source_location file_src = std::source_location::current())
+    Warning(const uint64_t id = utils::get_thread_id(),
+            const std::source_location file_src = std::source_location::current())
         : Log(Level::Warning, output_.stream(), output_.mutex(), id, file_src) {}
   };
 
   struct Error : public Log {
-    Error(const uint32_t id = gettid(), const std::source_location file_src = std::source_location::current())
+    Error(const uint64_t id = utils::get_thread_id(),
+          const std::source_location file_src = std::source_location::current())
         : Log(Level::Error, output_.stream(), output_.mutex(), id, file_src) {}
   };
 

@@ -1,3 +1,4 @@
+#include "logger/Level.hpp"
 #include "logger/Logger.hpp"
 #include "logger/Output.hpp"
 
@@ -7,7 +8,7 @@ using termina_logger = sb::logger::Logger<"Termina", sb::logger::output::Termina
 
 }  // namespace
 
-int main(int argc, char* argv[]) {
+int main() {
   console_logger::Info() << "HOLY THIS WORKS" << std::endl;
   termina_logger::Info() << "HOLY THIS WORKS" << std::endl;
   return 0;
