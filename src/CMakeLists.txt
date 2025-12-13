@@ -3,6 +3,8 @@ create_static_lib("database"
   )
 
 add_subdirectory(database/tables)
+add_subdirectory(types)
+
 
 target_link_libraries(database 
   sb::types
