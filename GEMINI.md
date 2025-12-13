@@ -45,11 +45,16 @@ To build a specific example (e.g., `DatabaseApp`):
 ./scripts/build.sh -e DatabaseApp
 ```
 
+The available example applications are: `ConfigApp`, `DatabaseApp`, `FilteringApp`, `NotifierApp`, `SingletonApp`, `StringLiteralApp`, and `ThreadSafeApp`.
+
 ## Library Components
 
 ### Database (`database/`)
 
-The `database` library provides a `TagDaoImpl` class that implements a DAO pattern for a `TagDaoObj`. It supports basic CRUD (Create, Read, Update, Delete) operations.
+The `database` library provides `TagDAO` and `TagDTO` classes. `TagDAO` implements a DAO pattern for `TagDTO` objects, supporting basic CRUD (Create, Read, Update, Delete) operations on a `tags` table with `tag` (TEXT PRIMARY KEY) and `tag_type` (INTEGER) columns. The library also includes:
+*   `Handler`: Manages SQLite database connections and ensures thread-safe access.
+*   `Interface`: A templated base class defining the common DAO operations.
+*   `Types`: Defines utility types like `Buffer` for database operations.
 
 ### Event (`event/`)
 
