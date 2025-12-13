@@ -71,7 +71,7 @@ class Logger {
       context << " ";
       context << "[" << std::setw(6) << id_ << "]";
       context << " ";
-      context << std::setw(20) << std::right << domain.data;
+      context << std::setw(30) << std::right << domain.data;
       context << " ";
       context << to_color(level_) << " " << to_string(level_) << " " << default_light;
       context << " ";

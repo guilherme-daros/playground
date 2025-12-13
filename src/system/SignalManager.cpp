@@ -20,7 +20,7 @@ SignalManager::SignalManager() {
   bridge_thread_ = std::thread(&SignalManager::bridge_thread, this);
 }
 
-void SignalManager::enable(Signal::Enum s) {
+auto SignalManager::enable(Signal::Enum s) -> void {
   struct sigaction sa = {};
   sa.sa_handler = posix_signal_handler;
   sigemptyset(&sa.sa_mask);
@@ -33,7 +33,7 @@ void SignalManager::enable(Signal::Enum s) {
   }
 }
 
-void SignalManager::enableAll() {
+auto SignalManager::enableAll() -> void {
   struct sigaction sa = {};
   sa.sa_handler = posix_signal_handler;
   sigemptyset(&sa.sa_mask);

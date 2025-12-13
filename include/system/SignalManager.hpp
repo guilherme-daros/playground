@@ -2,7 +2,6 @@
 
 #include <thread>
 
-#include "event/Notifier.hpp"
 #include "logger/Logger.hpp"
 #include "system/Signals.hpp"
 #include "types/Singleton.hpp"
@@ -14,11 +13,11 @@ class SignalManager final : public sb::types::Singleton<SignalManager> {
   ~SignalManager();
   SignalManager();
 
-  static void enableAll();
-  static void enable(Signal::Enum s);
+  static auto enableAll() -> void;
+  static auto enable(Signal::Enum s) -> void;
 
  private:
-  void bridge_thread() {
+  auto bridge_thread() -> void {
     using BridgeThread = sb::logger::Logger<"BridgeThread">;
     BridgeThread::logging_level = sb::logger::Level::Debug;
 
@@ -27,18 +26,13 @@ class SignalManager final : public sb::types::Singleton<SignalManager> {
 
     while (read(pipe_fds_[0], &signum, sizeof(signum)) > 0) {
       auto sig = static_cast<Signal::Enum>(signum);
-      switch (sig) {
-        case Signal::Enum::SIGINT:
-          sb::event::Notify<Signal::SIGINT>();
-          break;
-        default:
-          break;
-      }
+
+      sb::system::Notify(sig);
     }
 
     BridgeThread::Debug() << "Finished." << std::endl;
   }
-  static void posix_signal_handler(int signum);
+  static auto posix_signal_handler(int signum) -> void;
 
   std::thread bridge_thread_;
   static std::vector<Signal::Enum> enabled_signals_;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "event/Listener.hpp"
 namespace sb::system {
 class Signal {
  public:
@@ -254,4 +255,102 @@ class Signal {
     void operator()() { onSIGSYS(); }
   };
 };
+
+inline auto Notify(Signal::Enum s) -> void {
+  switch (s) {
+    case Signal::Enum::SIGHUP:
+      sb::event::Listener<Signal::SIGHUP>::Notify();
+      break;
+    case Signal::Enum::SIGINT:
+      sb::event::Listener<Signal::SIGINT>::Notify();
+      break;
+    case Signal::Enum::SIGQUIT:
+      sb::event::Listener<Signal::SIGQUIT>::Notify();
+      break;
+    case Signal::Enum::SIGILL:
+      sb::event::Listener<Signal::SIGILL>::Notify();
+      break;
+    case Signal::Enum::SIGTRAP:
+      sb::event::Listener<Signal::SIGTRAP>::Notify();
+      break;
+    case Signal::Enum::SIGABRT:
+      sb::event::Listener<Signal::SIGABRT>::Notify();
+      break;
+    case Signal::Enum::SIGBUS:
+      sb::event::Listener<Signal::SIGBUS>::Notify();
+      break;
+    case Signal::Enum::SIGFPE:
+      sb::event::Listener<Signal::SIGFPE>::Notify();
+      break;
+    case Signal::Enum::SIGKILL:
+      sb::event::Listener<Signal::SIGKILL>::Notify();
+      break;
+    case Signal::Enum::SIGUSR1:
+      sb::event::Listener<Signal::SIGUSR1>::Notify();
+      break;
+    case Signal::Enum::SIGSEGV:
+      sb::event::Listener<Signal::SIGSEGV>::Notify();
+      break;
+    case Signal::Enum::SIGUSR2:
+      sb::event::Listener<Signal::SIGUSR2>::Notify();
+      break;
+    case Signal::Enum::SIGPIPE:
+      sb::event::Listener<Signal::SIGPIPE>::Notify();
+      break;
+    case Signal::Enum::SIGALRM:
+      sb::event::Listener<Signal::SIGALRM>::Notify();
+      break;
+    case Signal::Enum::SIGTERM:
+      sb::event::Listener<Signal::SIGTERM>::Notify();
+      break;
+    case Signal::Enum::SIGSTKFLT:
+      sb::event::Listener<Signal::SIGSTKFLT>::Notify();
+      break;
+    case Signal::Enum::SIGCHLD:
+      sb::event::Listener<Signal::SIGCHLD>::Notify();
+      break;
+    case Signal::Enum::SIGCONT:
+      sb::event::Listener<Signal::SIGCONT>::Notify();
+      break;
+    case Signal::Enum::SIGSTOP:
+      sb::event::Listener<Signal::SIGSTOP>::Notify();
+      break;
+    case Signal::Enum::SIGTSTP:
+      sb::event::Listener<Signal::SIGTSTP>::Notify();
+      break;
+    case Signal::Enum::SIGTTIN:
+      sb::event::Listener<Signal::SIGTTIN>::Notify();
+      break;
+    case Signal::Enum::SIGTTOU:
+      sb::event::Listener<Signal::SIGTTOU>::Notify();
+      break;
+    case Signal::Enum::SIGURG:
+      sb::event::Listener<Signal::SIGURG>::Notify();
+      break;
+    case Signal::Enum::SIGXCPU:
+      sb::event::Listener<Signal::SIGXCPU>::Notify();
+      break;
+    case Signal::Enum::SIGXFSZ:
+      sb::event::Listener<Signal::SIGXFSZ>::Notify();
+      break;
+    case Signal::Enum::SIGVTALRM:
+      sb::event::Listener<Signal::SIGVTALRM>::Notify();
+      break;
+    case Signal::Enum::SIGPROF:
+      sb::event::Listener<Signal::SIGPROF>::Notify();
+      break;
+    case Signal::Enum::SIGWINCH:
+      sb::event::Listener<Signal::SIGWINCH>::Notify();
+      break;
+    case Signal::Enum::SIGPOLL:
+      sb::event::Listener<Signal::SIGPOLL>::Notify();
+      break;
+    case Signal::Enum::SIGPWR:
+      sb::event::Listener<Signal::SIGPWR>::Notify();
+      break;
+    case Signal::Enum::SIGSYS:
+      sb::event::Listener<Signal::SIGSYS>::Notify();
+      break;
+  }
+}
 }  // namespace sb::system

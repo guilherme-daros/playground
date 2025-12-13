@@ -29,6 +29,9 @@ class Listener {
     sb::types::ThreadPool::SetConfig(2);
     auto& tp = sb::types::ThreadPool::Instance();
 
+    EventLogger::logging_level = logger::Level::Debug;
+
+    typename EventLogger::Debug() << "Notifying" << std::endl;
     for (auto const& [id, listener] : notify_list()) {
       futures_.push_back(tp.enqueue([listener, args...]() { (*listener)(args...); }));
     }
