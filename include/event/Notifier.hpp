@@ -16,9 +16,9 @@ auto RemoveListener(ListenerType* listener) -> void {
   list.erase(reinterpret_cast<std::uintptr_t>(listener));
 }
 
-template <typename T, typename... Args>
-  requires std::invocable<T, Args...>
+template <typename F, typename... Args>
+  requires std::invocable<F, Args...>
 auto Notify(Args... args) -> void {
-  Listener<T>::Notify(args...);
+  Listener<F>::Notify(args...);
 }
 }  // namespace sb::event
