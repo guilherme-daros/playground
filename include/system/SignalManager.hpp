@@ -4,6 +4,7 @@
 
 #include "logger/Logger.hpp"
 #include "system/Signals.hpp"
+#include "types/Result.hpp"
 #include "types/Singleton.hpp"
 
 namespace sb::system {
@@ -13,8 +14,8 @@ class SignalManager final : public sb::types::Singleton<SignalManager> {
   ~SignalManager();
   SignalManager();
 
-  static auto enableAll() -> void;
-  static auto enable(Signal::Enum s) -> void;
+  static auto enableAll() -> Result<void>;
+  static auto enable(Signal::Enum s) -> Result<void>;
 
  private:
   auto bridge_thread() -> void {

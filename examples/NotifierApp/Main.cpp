@@ -1,23 +1,23 @@
 #include <chrono>
 #include <cstdlib>
-#include <exception>
 #include <iostream>
 #include <thread>
 
 #include "event/Listen.hpp"
 #include "event/Notifier.hpp"
 #include "logger/Logger.hpp"
+#include "types/Exception.hpp"
 
 using namespace std::chrono_literals;
 
-class ExceptionA : public std::exception {
- private:
-  std::string message;  // To store the custom error message
+class ExceptionA : public sb::types::Exception<ExceptionA> {
  public:
-  ExceptionA(const std::string& msg) : message(msg) {}
+  ExceptionA(const std::string& msg) : message_(base_ + msg) {}
 
-  // Override the what() method to return the custom message
-  const char* what() const noexcept { return message.c_str(); }
+  const char* what() const noexcept override { return message_.c_str(); }
+
+ private:
+  std::string message_;
 };
 
 class EventA {
@@ -38,7 +38,7 @@ class ObjectA final : public sb::event::Listen<EventA> {
   auto OnA(bool done) -> void override {
     (void)done;
 
-    std::this_thread::sleep_for(std::chrono::seconds(rand() % 10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 100));
 
     if ((rand() % 10) > 5) {
       throw ExceptionA("Luck is not on our side");
@@ -51,9 +51,9 @@ class ObjectA final : public sb::event::Listen<EventA> {
 auto main() -> int {
   auto a = ObjectA();
 
-  for (auto i = 0; i < 100; i++) {
+  for (auto i = 0; i < 10; i++) {
     sb::event::Notify<EventA>(true);
-    std::this_thread::sleep_for(50ms);
+    std::this_thread::sleep_for(1ms);
   }
 
   std::cout << "Main Thread Stopping" << std::endl;

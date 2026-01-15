@@ -10,7 +10,12 @@ using Main = sb::logger::Logger<"Main">;
 
 void print_all(sb::database::TagDAO& dao) {
   Main::Info() << "Reading all tags..." << std::endl;
-  auto all_tags = dao.ReadAll();
+  auto res = dao.ReadAll();
+  if (!res) {
+    Main::Error() << "Failed to read all tags: " << res.error() << std::endl;
+    return;
+  }
+  auto all_tags = res.value();
 
   if (all_tags.empty()) {
     Main::Info() << "(No tags in database)" << std::endl;
@@ -24,7 +29,12 @@ void print_all(sb::database::TagDAO& dao) {
 int main(int argc, char* argv[]) {
   Main::Info() << "Database App Example" << std::endl;
 
-  sb::database::Handler h("Test.db");
+  auto h_res = sb::database::Handler::create("Test.db");
+  if (!h_res) {
+    Main::Error() << "Failed to open database: " << h_res.error() << std::endl;
+    return 1;
+  }
+  auto h = std::move(h_res.value());
   sb::database::TagDAO dao(h, "MyTags");
 
   Main::Info() << "Deleting all previous tags..." << std::endl;

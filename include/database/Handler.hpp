@@ -6,6 +6,7 @@
 
 #include "logger/Logger.hpp"
 #include "sqlite3.h"
+#include "types/Result.hpp"
 
 namespace sb::database {
 
@@ -24,27 +25,20 @@ class Handler {
     }
   };
 
- public:
-  explicit Handler(const std::string& db_path) : db_path_{db_path} {
-    sqlite3* db_ptr = nullptr;
-    auto rc = sqlite3_open(db_path.c_str(), &db_ptr);
-    db_.reset(db_ptr);
-
-    if (rc) {
-      Database::Error() << "Error opening " << db_path << ": " << sqlite3_errmsg(db_.get()) << std::endl;
-      db_.reset();  // Release pointer on failure
-    } else {
-      Database::Info() << "Successfully opened DB: " << db_path << std::endl;
-      sqlite3_busy_handler(db_.get(), busy_handler, NULL);
-      sqlite3_busy_timeout(db_.get(), 100);
-    }
+ private:
+  explicit Handler(const std::string& db_path, std::unique_ptr<sqlite3, Sqlite3Deleter> db)
+      : db_path_{db_path}, db_{std::move(db)} {
+    Database::Info() << "Successfully opened DB: " << db_path << std::endl;
+    sqlite3_busy_handler(db_.get(), busy_handler, NULL);
+    sqlite3_busy_timeout(db_.get(), 100);
   }
 
-  // Deleted copy and move semantics to prevent issues with the DB handle
+ public:
+  static auto create(const std::string& db_path) -> Result<Handler>;
+
+  // Deleted copy semantics to prevent issues with the DB handle
   Handler(const Handler&) = delete;
   auto operator=(const Handler&) -> Handler& = delete;
-  Handler(Handler&&) = delete;
-  auto operator=(Handler&&) -> Handler& = delete;
 
   ~Handler() = default;  // The unique_ptr will handle closing the DB
 

@@ -33,7 +33,15 @@ class Listener {
 
     typename EventLogger::Debug() << "Notifying" << std::endl;
     for (auto const& [id, listener] : notify_list()) {
-      futures_.push_back(tp.enqueue([listener, args...]() { (*listener)(args...); }));
+      futures_.push_back(tp.enqueue([listener, args...]() {
+        try {
+          (*listener)(args...);
+        } catch (const std::exception& e) {
+          typename EventLogger::Error() << e.what() << std::endl;
+        } catch (...) {
+          typename EventLogger::Error() << "Unknown exception caught" << std::endl;
+        }
+      }));
     }
   }
 
@@ -42,7 +50,7 @@ class Listener {
       try {
         (*listener)(args...);
       } catch (const std::exception& e) {
-        typename EventLogger::Error() << "Thrown: " << e.what() << std::endl;
+        typename EventLogger::Error() << e.what() << std::endl;
       } catch (...) {
         typename EventLogger::Error() << "Unknown exception caught" << std::endl;
       }

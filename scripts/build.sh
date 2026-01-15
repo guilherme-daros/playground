@@ -25,11 +25,11 @@ case "$1" in
       echo "Provide the name of the Example"
       exit 0
     else
-      cmake -S . -B $BUILD_DIR  -DBUILD_EXAMPLES=yes -DCMAKE_BUILD_TYPE=Debug
+      cmake -G "Ninja" -S . -B $BUILD_DIR  -DBUILD_EXAMPLES=yes -DCMAKE_BUILD_TYPE=Debug
     fi
     ;;
   -es | --examples)
-    cmake -S . -B $BUILD_DIR  -DBUILD_EXAMPLES=yes -DCMAKE_BUILD_TYPE=Debug
+    cmake -G "Ninja" -S . -B $BUILD_DIR  -DBUILD_EXAMPLES=yes -DCMAKE_BUILD_TYPE=Debug
     ;;
   -h | --help)
     show_help
@@ -37,7 +37,7 @@ case "$1" in
     ;;
   *)
     mkdir -p $BUILD_DIR
-    cmake -S . -B $BUILD_DIR 
+    cmake -G "Ninja" -S . -B $BUILD_DIR 
     ;;
 esac
 
