@@ -31,15 +31,15 @@ class Listener {
 
     EventLogger::logging_level = logger::Level::Debug;
 
-    typename EventLogger::Debug() << "Notifying" << std::endl;
+    typename EventLogger::Debug() << "Notifying";
     for (auto const& [id, listener] : notify_list()) {
       futures_.push_back(tp.enqueue([listener, args...]() {
         try {
           (*listener)(args...);
         } catch (const std::exception& e) {
-          typename EventLogger::Error() << e.what() << std::endl;
+          typename EventLogger::Error() << e.what();
         } catch (...) {
-          typename EventLogger::Error() << "Unknown exception caught" << std::endl;
+          typename EventLogger::Error() << "Unknown exception caught";
         }
       }));
     }
@@ -50,9 +50,9 @@ class Listener {
       try {
         (*listener)(args...);
       } catch (const std::exception& e) {
-        typename EventLogger::Error() << e.what() << std::endl;
+        typename EventLogger::Error() << e.what();
       } catch (...) {
-        typename EventLogger::Error() << "Unknown exception caught" << std::endl;
+        typename EventLogger::Error() << "Unknown exception caught";
       }
     }
   }
@@ -69,9 +69,9 @@ class Listener {
         try {
           f.get();
         } catch (const std::exception& e) {
-          typename EventLogger::Error() << "Thrown: " << e.what() << std::endl;
+          typename EventLogger::Error() << "Thrown: " << e.what();
         } catch (...) {
-          typename EventLogger::Error() << "Unknown exception caught" << std::endl;
+          typename EventLogger::Error() << "Unknown exception caught";
         }
       }
     }

@@ -18,7 +18,7 @@ void TagDAO::CreateTable() {
   char* err_msg = nullptr;
   int rc = sqlite3_exec(db_handler_.get(), sql.c_str(), 0, 0, &err_msg);
   if (rc != SQLITE_OK) {
-    Database::Error() << "Failed to create table: " << err_msg << std::endl;
+    Database::Error() << "Failed to create table: " << err_msg;
     sqlite3_free(err_msg);
   }
 }

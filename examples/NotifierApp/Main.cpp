@@ -44,7 +44,7 @@ class ObjectA final : public sb::event::Listen<EventA> {
       throw ExceptionA("Luck is not on our side");
     }
 
-    LogA::Info() << "Received EventA " << std::endl;
+    LogA::Info() << "Received EventA ";
   }
 };
 
@@ -56,6 +56,6 @@ auto main() -> int {
     std::this_thread::sleep_for(1ms);
   }
 
-  std::cout << "Main Thread Stopping" << std::endl;
+  std::cout << "Main Thread Stopping";
   return 0;
 }

@@ -12,4 +12,4 @@ class MyClass {
   }();
 };
 
-int main() { std::cout << MyClass<"Help">::db_name_.data() << std::endl; }
+int main() { std::cout << MyClass<"Help">::db_name_.data(); }

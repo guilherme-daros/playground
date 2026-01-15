@@ -38,4 +38,27 @@ struct TypeFinder<Base, Predicate> {
 template <typename Base, auto Predicate, typename... Types>
 using TypeFinder_t = typename TypeFinder<Base, Predicate, Types...>::type;
 
+template <auto Predicate, typename... Types>
+struct AnyOf;
+
+template <auto Predicate, typename First, typename... Rest>
+  requires PredicateIsTrue<Predicate, First>
+struct AnyOf<Predicate, First, Rest...> {
+  static constexpr bool value = true;
+};
+
+template <auto Predicate, typename First, typename... Rest>
+  requires PredicateIsFalse<Predicate, First>
+struct AnyOf<Predicate, First, Rest...> {
+  static constexpr bool value = AnyOf<Predicate, Rest...>::value;
+};
+
+template <auto Predicate>
+struct AnyOf<Predicate> {
+  static constexpr bool value = false;
+};
+
+template <auto Predicate, typename... Types>
+static constexpr bool any_of = AnyOf<Predicate, Types...>::value;
+
 }  // namespace sb::logger::meta

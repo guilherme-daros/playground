@@ -10,7 +10,7 @@ constexpr auto num = 1000;
 
 auto runnable() {
   for (auto i = 0; i < num; i++) {
-    Test::Info() << " Logging: " << i << std::endl;
+    Test::Info() << " Logging: " << i;
   }
 };
 

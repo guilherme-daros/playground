@@ -22,7 +22,7 @@ class SignalManager final : public sb::types::Singleton<SignalManager> {
     using BridgeThread = sb::logger::Logger<"BridgeThread">;
     BridgeThread::logging_level = sb::logger::Level::Debug;
 
-    BridgeThread::Debug() << "Started." << std::endl;
+    BridgeThread::Debug() << "Started.";
     int signum;
 
     while (read(pipe_fds_[0], &signum, sizeof(signum)) > 0) {
@@ -31,7 +31,7 @@ class SignalManager final : public sb::types::Singleton<SignalManager> {
       sb::system::Notify(sig);
     }
 
-    BridgeThread::Debug() << "Finished." << std::endl;
+    BridgeThread::Debug() << "Finished.";
   }
   static auto posix_signal_handler(int signum) -> void;
 

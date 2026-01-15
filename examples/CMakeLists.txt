@@ -6,4 +6,8 @@ add_subdirectory(SingletonApp)
 add_subdirectory(StringLiteralApp)
 add_subdirectory(ThreadSafeApp)
 add_subdirectory(SignalApp)
+add_subdirectory(DisabledLoggerApp)
+add_subdirectory(EnumStrApp)
+add_subdirectory(TypenameApp)
+add_subdirectory(BufferApp)
 

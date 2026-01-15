@@ -1,15 +1,15 @@
 #include "logger/Level.hpp"
 #include "logger/Logger.hpp"
-#include "logger/Output.hpp"
+#include "logger/config/Output.hpp"
 
 namespace {
 using console_logger = sb::logger::Logger<"Console">;
-using termina_logger = sb::logger::Logger<"Termina", sb::logger::output::Terminal>;
+using termina_logger = sb::logger::Logger<"Termina", sb::logger::config::Terminal>;
 
 }  // namespace
 
 int main() {
-  console_logger::Info() << "HOLY THIS WORKS" << std::endl;
-  termina_logger::Info() << "HOLY THIS WORKS" << std::endl;
+  console_logger::Info() << "HOLY THIS WORKS";
+  termina_logger::Info() << "HOLY THIS WORKS";
   return 0;
 }

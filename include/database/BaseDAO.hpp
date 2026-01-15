@@ -31,7 +31,7 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
     int rc = sqlite3_exec(db_handler_.get(), sql.c_str(), 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
       std::string err = "Failed to execute statement: " + std::string(err_msg);
-      Database::Error() << err << std::endl;
+      Database::Error() << err;
       sqlite3_free(err_msg);
       return std::unexpected(err);
     }
@@ -54,7 +54,7 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
     int rc = sqlite3_prepare_v2(db_handler_.get(), sql.c_str(), -1, &stmt, 0);
     if (rc != SQLITE_OK) {
       std::string err = "Failed to prepare statement: " + std::string(sqlite3_errmsg(db_handler_.get()));
-      Database::Error() << err << std::endl;
+      Database::Error() << err;
       return std::unexpected(err);
     }
     binder(stmt);
@@ -62,7 +62,7 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
     sqlite3_finalize(stmt);
     if (rc != SQLITE_DONE) {
       std::string err = "Failed to execute statement: " + std::string(sqlite3_errmsg(db_handler_.get()));
-      Database::Error() << err << std::endl;
+      Database::Error() << err;
       return std::unexpected(err);
     }
     return {};
@@ -76,7 +76,7 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
     int rc = sqlite3_prepare_v2(db_handler_.get(), sql.c_str(), -1, &stmt, 0);
     if (rc != SQLITE_OK) {
       std::string err = "Failed to prepare statement: " + std::string(sqlite3_errmsg(db_handler_.get()));
-      Database::Error() << err << std::endl;
+      Database::Error() << err;
       return std::unexpected(err);
     }
 
@@ -88,7 +88,7 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
       int rc = sqlite3_prepare_v2(db_handler_.get(), sql.c_str(), -1, &stmt, 0);
       if (rc != SQLITE_OK) {
         std::string err = "Failed to prepare statement: " + std::string(sqlite3_errmsg(db_handler_.get()));
-        Database::Error() << err << std::endl;
+        Database::Error() << err;
         return std::unexpected(err);
       }
       while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -96,7 +96,7 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
       }
       if (rc != SQLITE_DONE) {
         std::string err = "Failed to execute query: " + std::string(sqlite3_errmsg(db_handler_.get()));
-        Database::Error() << err << std::endl;
+        Database::Error() << err;
         sqlite3_finalize(stmt);
         return std::unexpected(err);
       }

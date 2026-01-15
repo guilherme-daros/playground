@@ -19,7 +19,7 @@ class Handler {
   struct Sqlite3Deleter {
     void operator()(sqlite3* db) const {
       if (db) {
-        Database::Info() << "Closing DB connection." << std::endl;
+        Database::Info() << "Closing DB connection.";
         sqlite3_close(db);
       }
     }
@@ -28,7 +28,7 @@ class Handler {
  private:
   explicit Handler(const std::string& db_path, std::unique_ptr<sqlite3, Sqlite3Deleter> db)
       : db_path_{db_path}, db_{std::move(db)} {
-    Database::Info() << "Successfully opened DB: " << db_path << std::endl;
+    Database::Info() << "Successfully opened DB: " << db_path;
     sqlite3_busy_handler(db_.get(), busy_handler, NULL);
     sqlite3_busy_timeout(db_.get(), 100);
   }

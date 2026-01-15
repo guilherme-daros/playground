@@ -5,9 +5,9 @@
 #include <mutex>
 #include <ostream>
 
-#include "Meta.hpp"
+#include "../Meta.hpp"
 
-namespace sb::logger::output {
+namespace sb::logger::config {
 
 template <typename T>
 concept IsOutput = requires(T t) {
@@ -48,4 +48,4 @@ constexpr auto is_output = []<typename T>() { return IsOutput<T>; };
 template <typename... Ts>
 using Output = meta::TypeFinder_t<Console, is_output, Ts...>;
 
-}  // namespace sb::logger::output
+}  // namespace sb::logger::config
