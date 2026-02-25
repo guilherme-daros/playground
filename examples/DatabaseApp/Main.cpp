@@ -48,8 +48,9 @@ int main(int argc, char* argv[]) {
   print_all(dao);
 
   Main::Info() << "Reading 'Python' tag...";
-  auto python_tag = dao.Read("Python");
-  if (python_tag) {
+  auto python_tag_res = dao.Read("Python");
+  if (python_tag_res && python_tag_res.value()) {
+    auto& python_tag = python_tag_res.value();
     Main::Info() << "  Found Tag: " << python_tag->tag() << ", Type: " << python_tag->type();
   } else {
     Main::Error() << "Could not find 'Python' tag";
@@ -57,8 +58,9 @@ int main(int argc, char* argv[]) {
 
   Main::Info() << "Updating 'Python' tag type to 20...";
   dao.Update(sb::database::TagDTO{"Python", 20});
-  python_tag = dao.Read("Python");
-  if (python_tag) {
+  python_tag_res = dao.Read("Python");
+  if (python_tag_res && python_tag_res.value()) {
+    auto& python_tag = python_tag_res.value();
     Main::Info() << "  Updated Tag: " << python_tag->tag() << ", Type: " << python_tag->type();
   } else {
     Main::Error() << "Could not find 'Python' tag after update";

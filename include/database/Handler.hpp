@@ -27,7 +27,7 @@ class Handler {
 
  private:
   explicit Handler(const std::string& db_path, std::unique_ptr<sqlite3, Sqlite3Deleter> db)
-      : db_path_{db_path}, db_{std::move(db)} {
+      : db_path_{db_path}, db_{std::move(db)}, mtx_{std::make_unique<std::mutex>()} {
     Database::Info() << "Successfully opened DB: " << db_path;
     sqlite3_busy_handler(db_.get(), busy_handler, NULL);
     sqlite3_busy_timeout(db_.get(), 100);
@@ -36,22 +36,26 @@ class Handler {
  public:
   static auto create(const std::string& db_path) -> Result<Handler>;
 
-  // Deleted copy semantics to prevent issues with the DB handle
+  // Deleted copy semantics
   Handler(const Handler&) = delete;
   auto operator=(const Handler&) -> Handler& = delete;
 
-  ~Handler() = default;  // The unique_ptr will handle closing the DB
+  // Move semantics
+  Handler(Handler&&) noexcept = default;
+  auto operator=(Handler&&) noexcept -> Handler& = default;
+
+  ~Handler() = default;
 
   auto get() const -> sqlite3* { return db_.get(); }
 
   auto path() const -> const std::string& { return db_path_; }
 
-  auto get_mutex() -> std::mutex& { return mtx_; }
+  auto get_mutex() -> std::mutex& { return *mtx_; }
 
  private:
   std::string db_path_;
   std::unique_ptr<sqlite3, Sqlite3Deleter> db_;
-  std::mutex mtx_;
+  std::unique_ptr<std::mutex> mtx_;
 };
 
 }  // namespace sb::database

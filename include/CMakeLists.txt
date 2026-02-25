@@ -1,2 +1,1 @@
-create_interface_lib("event")
-create_interface_lib("logger")
+# Header-only libraries are now in submodules

@@ -80,29 +80,54 @@ class BaseDAO : public Interface<T, PrimaryKeyType> {
       return std::unexpected(err);
     }
 
-    // Helper for reading multiple rows
-    auto query_all(const std::string& sql, std::function<T(sqlite3_stmt*)> extractor) -> Result<std::list<T>> {
-      std::lock_guard<std::mutex> lock(db_handler_.get_mutex());
-      std::list<T> results;
-      sqlite3_stmt* stmt = nullptr;
-      int rc = sqlite3_prepare_v2(db_handler_.get(), sql.c_str(), -1, &stmt, 0);
-      if (rc != SQLITE_OK) {
-        std::string err = "Failed to prepare statement: " + std::string(sqlite3_errmsg(db_handler_.get()));
-        Database::Error() << err;
-        return std::unexpected(err);
-      }
-      while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        results.emplace_back(extractor(stmt));
-      }
-      if (rc != SQLITE_DONE) {
-        std::string err = "Failed to execute query: " + std::string(sqlite3_errmsg(db_handler_.get()));
-        Database::Error() << err;
-        sqlite3_finalize(stmt);
-        return std::unexpected(err);
-      }
+    binder(stmt);
+    rc = sqlite3_step(stmt);
+    std::optional<T> result;
+    if (rc == SQLITE_ROW) {
+      result = extractor(stmt);
+    } else if (rc != SQLITE_DONE) {
+      std::string err = "Failed to execute query: " + std::string(sqlite3_errmsg(db_handler_.get()));
+      Database::Error() << err;
       sqlite3_finalize(stmt);
-      return results;
+      return std::unexpected(err);
     }
+
+    sqlite3_finalize(stmt);
+    return result;
   }
 
-};  // namespace sb::database
+  // Helper for reading multiple rows
+  auto query_all(const std::string& sql, std::function<void(sqlite3_stmt*)> binder,
+                 std::function<T(sqlite3_stmt*)> extractor) -> Result<std::list<T>> {
+    std::lock_guard<std::mutex> lock(db_handler_.get_mutex());
+    std::list<T> results;
+    sqlite3_stmt* stmt = nullptr;
+    int rc = sqlite3_prepare_v2(db_handler_.get(), sql.c_str(), -1, &stmt, 0);
+    if (rc != SQLITE_OK) {
+      std::string err = "Failed to prepare statement: " + std::string(sqlite3_errmsg(db_handler_.get()));
+      Database::Error() << err;
+      return std::unexpected(err);
+    }
+
+    binder(stmt);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+      results.emplace_back(extractor(stmt));
+    }
+
+    if (rc != SQLITE_DONE) {
+      std::string err = "Failed to execute query: " + std::string(sqlite3_errmsg(db_handler_.get()));
+      Database::Error() << err;
+      sqlite3_finalize(stmt);
+      return std::unexpected(err);
+    }
+
+    sqlite3_finalize(stmt);
+    return results;
+  }
+
+  auto query_all(const std::string& sql, std::function<T(sqlite3_stmt*)> extractor) -> Result<std::list<T>> {
+    return query_all(sql, [](sqlite3_stmt*) {}, extractor);
+  }
+};
+
+}  // namespace sb::database

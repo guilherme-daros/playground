@@ -1,74 +1,27 @@
 cmake_minimum_required(VERSION 3.28)
-
 include(FetchContent)
 
-set(SQLITE_SOURCE_DIR "${CMAKE_BINARY_DIR}/sqlite3_src")
+# Use the latest 2026 version of SQLite amalgamation
+set(SQLITE_VERSION "3510200")
+set(SQLITE_URL "https://www.sqlite.org/2026/sqlite-amalgamation-${SQLITE_VERSION}.zip")
 
-execute_process(
-  COMMAND bash -c "curl -s https://www.sqlite.org/download.html | grep -oP 'sqlite-amalgamation-\\K[0-9]+' | head -1"
-  OUTPUT_VARIABLE SQLITE_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-if (SQLITE_VERSION STREQUAL "" AND NOT EXISTS ${CMAKE_BINARY_DIR}/sqlite3_src)
-  message(FATAL_ERROR "Failed to fetch the latest SQLite3 version. Check your internet connection.")
-endif()
-
-function(FetchSqlite VERSION)
-  set(SQLITE_URL "https://www.sqlite.org/2025/sqlite-amalgamation-${VERSION}.zip")
-
-  message(STATUS "Downloading SQLite3...")
-  execute_process(
-      COMMAND wget --quiet ${SQLITE_URL}
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      RESULT_VARIABLE EXTRACT_RESULT
-  )
-
-  message(STATUS "Extracting SQLite3...")
-  include(FetchContent)
-
-# Use a specific version of SQLite for stability.
-# The SHA256 hash below is a placeholder and needs to be updated with the correct hash
-# for the chosen SQLite amalgamation zip file.
 FetchContent_Declare(
   sqlite3_amalgamation
-  URL https://www.sqlite.org/2024/sqlite-amalgamation-3500400.zip
-  URL_HASH SHA256=0000000000000000000000000000000000000000000000000000000000000000 # Placeholder: Update with actual SHA256
+  URL ${SQLITE_URL}
 )
 
 FetchContent_MakeAvailable(sqlite3_amalgamation)
 
-file(GLOB_RECURSE SQLITE_SOURCE_FILES "${sqlite3_amalgamation_SOURCE_DIR}/*.c")
+# Find the source files in the extracted directory
+file(GLOB SQLITE_SOURCE_FILES "${sqlite3_amalgamation_SOURCE_DIR}/*.c")
 
+# Create the sqlite3 static library
 add_library(sqlite3 STATIC ${SQLITE_SOURCE_FILES})
 target_include_directories(sqlite3 PUBLIC "${sqlite3_amalgamation_SOURCE_DIR}")
 
-target_compile_definitions(sqlite3 PUBLIC SQLITE_OMIT_LOAD_EXTENSION)
-set_target_properties(sqlite3 PROPERTIES C_STANDARD 99)
-   
-  if (NOT EXTRACT_RESULT EQUAL 0)
-      message(FATAL_ERROR "Failed to extract SQLite3")
-  endif()
-
-  message(STATUS "SQLite3 extracted successfully!")
-  execute_process(
-    COMMAND rm ${CMAKE_BINARY_DIR}/sqlite-amalgamation-${VERSION}.zip
-    OUTPUT_QUIET
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  )
-
-endfunction()
-
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/sqlite3_src)
-  FetchSqlite(${SQLITE_VERSION})
-endif()
-
-
-file(GLOB_RECURSE SQLITE_SOURCE_FILES "${SQLITE_SOURCE_DIR}/*.c")
-
-add_library(sqlite3 STATIC ${SQLITE_SOURCE_FILES})
-target_include_directories(sqlite3 PUBLIC "${SQLITE_SOURCE_DIR}/sqlite-amalgamation-${SQLITE_VERSION}")
-
+# Standard SQLite configurations
 target_compile_definitions(sqlite3 PUBLIC SQLITE_OMIT_LOAD_EXTENSION)
 set_target_properties(sqlite3 PROPERTIES C_STANDARD 99)
 
+# Export as sb::sqlite3 for consistency if needed (though not required by workplan)
+add_library(sb::sqlite3 ALIAS sqlite3)

@@ -21,6 +21,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.bin)
 
+# Submodules (The Foundation)
+add_subdirectory(extern/sb-types)
+add_subdirectory(extern/sb-logger)
+add_subdirectory(extern/sb-event)
+
+# Database project components
 add_subdirectory("include")
 add_subdirectory("src")
 

@@ -1,18 +1,13 @@
-include("cmake/sqlite3.cmake" PUBLIC)
+include("${CMAKE_SOURCE_DIR}/cmake/sqlite3.cmake" PUBLIC)
 
 create_static_lib("database" 
-  ${CMAKE_CURRENT_LIST_DIR}/database/Handler.cpp
+  Handler.cpp
   )
 
-add_subdirectory(database/tables)
-add_subdirectory(types)
-add_subdirectory(system)
-
+add_subdirectory(tables)
 
 target_link_libraries(database 
+  PUBLIC
   sb::types
   sb::logger
   sqlite3)
-
-
-

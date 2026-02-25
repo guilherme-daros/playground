@@ -1,0 +1,9 @@
+[submodule "extern/sb-types"]
+	path = extern/sb-types
+	url = git@github.com:guilherme-daros/sb-types.git
+[submodule "extern/sb-logger"]
+	path = extern/sb-logger
+	url = git@github.com:guilherme-daros/sb-logger.git
+[submodule "extern/sb-event"]
+	path = extern/sb-event
+	url = git@github.com:guilherme-daros/sb-event.git
