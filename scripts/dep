@@ -1,0 +1,259 @@
+#!/usr/bin/env python3
+import argparse
+import subprocess
+import sys
+import os
+
+def run_command(cmd, cwd=None, capture_output=True, text=True):
+    try:
+        result = subprocess.run(cmd, cwd=cwd, capture_output=capture_output, text=text, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Error running command {' '.join(cmd)} in {cwd or '.'}: {e.stderr}")
+        return None
+
+def get_submodules():
+    output = run_command(['git', 'submodule', 'status', '--recursive'])
+    if output is None:
+        return []
+    
+    submodules = []
+    for line in output.split('\n'):
+        if not line: continue
+        parts = line.strip().split()
+        # sha = parts[0].lstrip('+- ')
+        path = parts[1]
+        submodules.append(path)
+    
+    # Sort by depth descending for bottom-up traversal
+    submodules.sort(key=lambda x: x.count('/'), reverse=True)
+    return submodules
+
+def handle_commit(path):
+    status = run_command(['git', 'status', '--porcelain'], cwd=path)
+    if not status:
+        print(f"No changes in {path}")
+        return False
+    
+    print(f"\nChanges detected in submodule: {path}")
+    print(status)
+    msg = input(f"Enter commit message for {path} (leave empty to skip): ").strip()
+    if msg:
+        run_command(['git', 'add', '-A'], cwd=path)
+        run_command(['git', 'commit', '-m', msg], cwd=path)
+        print(f"Committed changes in {path}")
+        return True
+    else:
+        print(f"Skipping commit for {path}")
+        return False
+
+def handle_push(path):
+    print(f"Pushing {path} to origin master...")
+    run_command(['git', 'push', 'origin', 'master'], cwd=path)
+
+def find_git_parent(path):
+    # Crawl up from path to find the nearest git parent
+    # path is a relative path from the root.
+    # Start at the directory containing the current path
+    current = os.path.dirname(path)
+    while current:
+        if os.path.exists(os.path.join(current, '.git')):
+            return current
+        current = os.path.dirname(current)
+    return '.'
+
+def handle_sync(path):
+    # Find the nearest git parent for the given path
+    parent_dir = find_git_parent(path)
+    # The name of the submodule as seen by the parent
+    # If parent_dir is '.', sub_name is just the full path.
+    # If parent_dir is 'extern/sb-event', and path is 'extern/sb-event/extern/sb-logger',
+    # sub_name is 'extern/sb-logger' (wait, no)
+    
+    # Actually, it's easier: git add <path> in parent_dir
+    # But git add <path> must be relative to parent_dir
+    if parent_dir == '.':
+        rel_path = path
+    else:
+        rel_path = os.path.relpath(path, parent_dir)
+    
+    # Check if the parent sees the submodule as modified (meaning SHA changed)
+    status = run_command(['git', 'status', '--porcelain', rel_path], cwd=parent_dir)
+    if status and rel_path in status:
+        print(f"Syncing {path} into parent {parent_dir}...")
+        run_command(['git', 'add', rel_path], cwd=parent_dir)
+        new_sha = run_command(['git', 'rev-parse', 'HEAD'], cwd=path)[:7]
+        run_command(['git', 'commit', '-m', f"chore: update submodule {os.path.basename(path)} to {new_sha}"], cwd=parent_dir)
+        return True
+    return False
+
+def build_tree_data(paths):
+    tree = {'__data__': None, 'submodules': {}}
+    for path, sha, version in paths:
+        parts = path.split('/')
+        current = tree
+        for part in parts:
+            if part not in current['submodules']:
+                current['submodules'][part] = {'__data__': None, 'submodules': {}}
+            current = current['submodules'][part]
+        current['__data__'] = (sha, version, path)
+    return tree['submodules']
+
+def print_submodule_tree(tree, indent=""):
+    keys = sorted(tree.keys())
+    for i, key in enumerate(keys):
+        is_last = (i == len(keys) - 1)
+        node = tree[key]
+        data = node['__data__']
+        
+        prefix = "└── " if is_last else "├── "
+        child_indent = "    " if is_last else "│   "
+        
+        info = ""
+        if data:
+            sha, version, full_path = data
+            info = f" ({full_path}) [{sha[:7]}]{' ' + version if version else ''}"
+        
+        print(f"{indent}{prefix}{key}{info}")
+        print_submodule_tree(node['submodules'], indent + child_indent)
+
+def handle_check():
+    output = run_command(['git', 'submodule', 'status', '--recursive'])
+    if not output:
+        print("No submodules found.")
+        return
+
+    # Map submodule name -> list of (path, sha)
+    submodule_versions = {}
+
+    for line in output.strip().split('\n'):
+        if not line: continue
+        parts = line.strip().split()
+        if not parts: continue
+        
+        sha = parts[0].lstrip('+- ')
+        path = parts[1]
+        name = os.path.basename(path)
+        
+        if name not in submodule_versions:
+            submodule_versions[name] = []
+        submodule_versions[name].append((path, sha))
+
+    mismatches_found = False
+    for name, versions in submodule_versions.items():
+        shas = {v[1] for v in versions}
+        if len(shas) > 1:
+            mismatches_found = True
+            print(f"\n[!] Version mismatch detected for submodule: {name}")
+            for path, sha in versions:
+                print(f"    {sha[:7]} - {path}")
+    
+    if not mismatches_found:
+        print("All submodules are synchronized to the same commits across the tree.")
+    else:
+        print("\nNote: Different versions of the same submodule were found. This may cause build issues.")
+
+def handle_tree():
+    output = run_command(['git', 'submodule', 'status', '--recursive'])
+    if not output:
+        print("No submodules found.")
+        return
+
+    paths = []
+    for line in output.strip().split('\n'):
+        if not line: continue
+        parts = line.strip().split()
+        if not parts: continue
+        
+        sha = parts[0].lstrip('+- ')
+        path = parts[1]
+        version = " ".join(parts[2:]) if len(parts) > 2 else ""
+        paths.append((path, sha, version))
+
+    tree = build_tree_data(paths)
+    print(".")
+    print_submodule_tree(tree)
+
+def handle_status(submodules):
+    changed_submodules = []
+    for path in submodules:
+        status = run_command(['git', 'status', '--porcelain'], cwd=path)
+        if status:
+            changed_submodules.append(path)
+    
+    if not changed_submodules:
+        print("No submodules have uncommitted changes.")
+        return
+
+    print("Submodules with uncommitted changes and their propagation impact:")
+    for path in changed_submodules:
+        print(f"\n[!] {path}")
+        # Trace parents
+        affected = []
+        current = path
+        while True:
+            parent = find_git_parent(current)
+            if parent == '.':
+                affected.append("Root Project")
+                break
+            else:
+                affected.append(parent)
+                current = parent
+        
+        print(f"    Impact: {' -> '.join(affected)}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Manage submodules: commit, push, and sync bottom-up.")
+    parser.add_argument('--commit', action='store_true', help="Commit changes in submodules")
+    parser.add_argument('--push', action='store_true', help="Push changes to origin master")
+    parser.add_argument('--sync', action='store_true', help="Sync submodule updates up the tree")
+    parser.add_argument('--status', action='store_true', help="Show submodules with changes and propagation impact")
+    parser.add_argument('--tree', action='store_true', help="Display the submodule dependency tree")
+    parser.add_argument('--check', action='store_true', help="Check for version mismatches of submodules across the tree")
+    
+    args = parser.parse_args()
+    
+    if not (args.commit or args.push or args.sync or args.status or args.tree or args.check):
+        print("Please specify at least one action: --commit, --push, --sync, --status, --tree, or --check")
+        sys.exit(1)
+
+    # Phase -1: Tree and Check
+    if args.tree:
+        handle_tree()
+    
+    if args.check:
+        handle_check()
+
+    submodules = get_submodules()
+    if not submodules:
+        print("No submodules found.")
+        return
+
+    # Phase 0: Status
+    if args.status:
+        handle_status(submodules)
+
+    # Phase 1: Commit
+    if args.commit:
+        for path in submodules:
+            handle_commit(path)
+
+    # Phase 2: Push
+    if args.push:
+        for path in submodules:
+            handle_push(path)
+
+    # Phase 3: Sync (Propagation)
+    if args.sync:
+        print("\nStarting bottom-up synchronization...")
+        for path in submodules:
+            handle_sync(path)
+        
+        # After all submodules are synced, check the root if it needs a sync
+        # Actually handle_sync(path) handles the parent. 
+        # If path is 'extern/sb-event/extern/sb-logger', handle_sync updates 'extern/sb-event'.
+        # If path is 'extern/sb-event', handle_sync updates '.'.
+        # This covers all levels.
+
+if __name__ == "__main__":
+    main()
