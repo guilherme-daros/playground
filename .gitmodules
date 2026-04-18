@@ -7,3 +7,9 @@
 [submodule "extern/sb-event"]
 	path = extern/sb-event
 	url = git@github.com:guilherme-daros/sb-event.git
+[submodule "extern/sb-meta"]
+	path = extern/sb-meta
+	url = git@github.com:guilherme-daros/sb-meta.git
+[submodule "extern/sb-container"]
+	path = extern/sb-container
+	url = git@github.com:guilherme-daros/sb-container.git

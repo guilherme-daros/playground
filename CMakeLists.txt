@@ -23,8 +23,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.bin)
 
 # Submodules (The Foundation)
 add_subdirectory(extern/sb-types)
+add_subdirectory(extern/sb-meta)
 add_subdirectory(extern/sb-logger)
 add_subdirectory(extern/sb-event)
+add_subdirectory(extern/sb-container)
 
 # Database project components
 add_subdirectory("include")
