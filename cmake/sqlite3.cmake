@@ -20,6 +20,7 @@ add_library(sqlite3 STATIC ${SQLITE_SOURCE_FILES})
 target_include_directories(sqlite3 PUBLIC "${sqlite3_amalgamation_SOURCE_DIR}")
 
 # Standard SQLite configurations
+target_compile_options(sqlite3 PRIVATE -w)
 target_compile_definitions(sqlite3 PUBLIC SQLITE_OMIT_LOAD_EXTENSION)
 set_target_properties(sqlite3 PROPERTIES C_STANDARD 99)
 
